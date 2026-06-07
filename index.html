@@ -1,0 +1,3256 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema Inteligente de Optimización Hospitalaria - IA & IoT</title>
+    <!-- Tailwind CSS CDN para un estilo moderno, rápido y responsive -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons para iconos limpios y profesionales -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      /* Estilos personalizados para transiciones suaves y scrollbars */
+      .fade-in {
+        animation: fadeIn 0.3s ease-in-out forwards;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      /* Custom scrollbar para una estética unificada */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #1976d2;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #1a237e;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+    <!-- PANTALLA DE LOGIN -->
+    <div
+      id="login-screen"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-[#1a237e] via-[#1976d2] to-slate-900 px-4"
+    >
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full fade-in">
+        <div class="text-center mb-6">
+          <div
+            class="inline-flex p-3 bg-blue-50 rounded-full text-[#1a237e] mb-3"
+          >
+            <i data-lucide="activity" class="w-10 h-10 animate-pulse"></i>
+          </div>
+          <h1 class="text-xl font-bold text-[#1a237e]">S.I.O.S.H.</h1>
+          <p
+            class="text-xs text-slate-500 mt-1 uppercase tracking-wider font-semibold"
+          >
+            IA & IoT Hospital Manager
+          </p>
+          <p class="text-sm text-slate-600 mt-2">
+            Ingrese sus credenciales para acceder
+          </p>
+        </div>
+
+        <!-- Alerta de Login Fallido -->
+        <div
+          id="login-error"
+          class="hidden mb-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 text-xs rounded"
+        >
+          Usuario o contraseña incorrectos. Intente de nuevo.
+        </div>
+
+        <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+          <div>
+            <label
+              class="block text-xs font-semibold text-slate-600 uppercase mb-1"
+              >Usuario</label
+            >
+            <div class="relative">
+              <span
+                class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"
+              >
+                <i data-lucide="user" class="w-4 h-4"></i>
+              </span>
+              <input
+                type="text"
+                id="login-username"
+                required
+                class="w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2] text-sm"
+                placeholder="Ej: admin"
+              />
+            </div>
+          </div>
+          <div>
+            <label
+              class="block text-xs font-semibold text-slate-600 uppercase mb-1"
+              >Contraseña</label
+            >
+            <div class="relative">
+              <span
+                class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"
+              >
+                <i data-lucide="lock" class="w-4 h-4"></i>
+              </span>
+              <input
+                type="password"
+                id="login-password"
+                required
+                class="w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2] text-sm"
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-[#1976d2] hover:bg-[#1a237e] text-white font-semibold py-2.5 px-4 rounded-lg transition duration-200 shadow-md text-sm"
+          >
+            Iniciar Sesión
+          </button>
+        </form>
+
+        <!-- Credenciales de Prueba -->
+        <div class="mt-6 pt-5 border-t border-slate-100">
+          <p class="text-xs font-bold text-slate-500 uppercase mb-2">
+            Credenciales de Acceso:
+          </p>
+          <div
+            class="grid grid-cols-1 gap-1.5 text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-200"
+          >
+            <div>
+              🔑 <strong class="text-slate-800">Administrador:</strong> admin /
+              admin123
+            </div>
+            <div>
+              🔑 <strong class="text-slate-800">Médico:</strong> medico /
+              medico123
+            </div>
+            <div>
+              🔑 <strong class="text-slate-800">Paciente:</strong> paciente /
+              paciente123
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENEDOR PRINCIPAL DE LA APLICACIÓN (Oculto antes de login) -->
+    <div
+      id="app-container"
+      class="hidden flex flex-col md:flex-row min-h-screen"
+    >
+      <!-- SIDEBAR DE NAVEGACIÓN -->
+      <aside
+        class="w-full md:w-64 bg-[#1a237e] text-white flex-shrink-0 flex flex-col shadow-xl z-20"
+      >
+        <!-- Branding -->
+        <div class="p-4 border-b border-blue-900 flex items-center gap-3">
+          <div class="p-2 bg-blue-700/50 rounded-lg text-white">
+            <i
+              data-lucide="shield-alert"
+              class="w-6 h-6 animate-pulse text-blue-300"
+            ></i>
+          </div>
+          <div>
+            <h2
+              class="text-sm font-black leading-tight uppercase tracking-wider"
+            >
+              S.I.O.S.H.
+            </h2>
+            <span class="text-[10px] text-blue-300"
+              >IA & IoT Hospital Solution</span
+            >
+          </div>
+        </div>
+
+        <!-- Perfil del Usuario en Sidebar -->
+        <div
+          class="p-4 bg-blue-950/40 border-b border-blue-900/60 flex items-center gap-3"
+        >
+          <div
+            class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-slate-800 font-bold"
+            id="user-avatar"
+          >
+            U
+          </div>
+          <div>
+            <h4 class="text-xs font-bold" id="sidebar-username">
+              Usuario Demo
+            </h4>
+            <span
+              class="text-[10px] px-2 py-0.5 rounded-full font-semibold inline-block mt-0.5"
+              id="sidebar-role-badge"
+              >Rol</span
+            >
+          </div>
+        </div>
+
+        <!-- Menú de Enlaces -->
+        <nav
+          class="flex-1 px-2 py-4 space-y-1 overflow-y-auto"
+          id="sidebar-nav"
+        >
+          <!-- Los enlaces se generan dinámicamente según el Rol en JS para mayor seguridad visual -->
+        </nav>
+
+        <!-- Botón de Cerrar Sesión inferior -->
+        <div class="p-3 border-t border-blue-900">
+          <button
+            onclick="logout()"
+            class="flex items-center gap-3 w-full px-3 py-2 text-xs font-semibold text-blue-200 hover:text-white hover:bg-red-900/30 rounded-lg transition duration-150"
+          >
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            <span>Cerrar Sesión</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- ÁREA DE CONTENIDO PRINCIPAL -->
+      <main class="flex-1 flex flex-col overflow-x-hidden">
+        <!-- HEADER DE CONTROL -->
+        <header
+          class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 z-10"
+        >
+          <div class="flex items-center gap-2">
+            <button
+              id="mobile-toggle-btn"
+              class="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+            >
+              <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+            <h1
+              class="text-lg font-bold text-slate-800 hidden sm:block"
+              id="current-view-title"
+            >
+              Dashboard
+            </h1>
+          </div>
+
+          <div class="flex items-center gap-4">
+            <!-- Alertas Rápidas en el Header -->
+            <div
+              class="relative cursor-pointer"
+              onclick="switchView('alertas')"
+            >
+              <span
+                class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold"
+                id="active-alerts-count"
+                >0</span
+              >
+              <i
+                data-lucide="bell"
+                class="w-5 h-5 text-slate-600 hover:text-[#1976d2] transition duration-150"
+              ></i>
+            </div>
+            <!-- Fecha Actual -->
+            <div
+              class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full"
+              id="header-date"
+            >
+              Fecha
+            </div>
+          </div>
+        </header>
+
+        <!-- VISTAS CONTENEDORAS -->
+        <div class="flex-1 p-6 overflow-y-auto" id="views-wrapper">
+          <!-- 1. DASHBOARD -->
+          <div id="view-dashboard" class="view-panel space-y-6 fade-in">
+            <div
+              class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+            >
+              <div>
+                <h2 class="text-2xl font-bold text-slate-900">
+                  Resumen Operativo
+                </h2>
+                <p class="text-xs text-slate-500">
+                  Métricas clave e información de dispositivos IoT en tiempo
+                  real.
+                </p>
+              </div>
+            </div>
+
+            <!-- Tarjetas de Métricas Principales -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div
+                class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4"
+              >
+                <div class="p-3 bg-blue-50 text-[#1976d2] rounded-lg">
+                  <i data-lucide="users" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-slate-500 uppercase">
+                    Pacientes Registrados
+                  </p>
+                  <h3
+                    class="text-2xl font-bold text-slate-800 mt-0.5"
+                    id="dash-total-pacientes"
+                  >
+                    0
+                  </h3>
+                </div>
+              </div>
+              <div
+                class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4"
+              >
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
+                  <i data-lucide="calendar" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-slate-500 uppercase">
+                    Citas del Día
+                  </p>
+                  <h3
+                    class="text-2xl font-bold text-slate-800 mt-0.5"
+                    id="dash-citas-dia"
+                  >
+                    0
+                  </h3>
+                </div>
+              </div>
+              <div
+                class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4"
+              >
+                <div class="p-3 bg-rose-50 text-rose-600 rounded-lg">
+                  <i
+                    data-lucide="alert-triangle"
+                    class="w-6 h-6 animate-pulse"
+                  ></i>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-slate-500 uppercase">
+                    Alertas Activas
+                  </p>
+                  <h3
+                    class="text-2xl font-bold text-slate-800 mt-0.5 text-rose-600"
+                    id="dash-alertas-activas"
+                  >
+                    0
+                  </h3>
+                </div>
+              </div>
+              <div
+                class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4"
+              >
+                <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
+                  <i
+                    data-lucide="cpu"
+                    class="w-6 h-6 text-indigo-500 animate-spin"
+                    style="animation-duration: 8s"
+                  ></i>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-slate-500 uppercase">
+                    Dispositivos IoT
+                  </p>
+                  <h3
+                    class="text-2xl font-bold text-slate-800 mt-0.5"
+                    id="dash-iot-count"
+                  >
+                    3/3
+                  </h3>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contenido Gráficos y Tablas Rápidas -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <!-- Canvas Gráfico Actividad -->
+              <div
+                class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm lg:col-span-2"
+              >
+                <div class="flex items-center justify-between mb-4">
+                  <h3
+                    class="text-sm font-bold text-slate-800 uppercase tracking-wide"
+                  >
+                    Actividad Médica Semanal
+                  </h3>
+                  <span
+                    class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded"
+                    >Citas Procesadas</span
+                  >
+                </div>
+                <div class="relative w-full" style="height: 240px">
+                  <canvas
+                    id="chartWeeklyActivity"
+                    class="w-full h-full"
+                  ></canvas>
+                </div>
+              </div>
+
+              <!-- Panel de Notificaciones de Alertas en Tiempo Real -->
+              <div
+                class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col"
+              >
+                <div class="flex items-center justify-between mb-3">
+                  <h3
+                    class="text-sm font-bold text-slate-800 uppercase tracking-wide"
+                  >
+                    Notificaciones Recientes
+                  </h3>
+                  <span
+                    class="bg-rose-100 text-rose-700 text-[10px] font-extrabold px-2 py-0.5 rounded-full"
+                    >SISTEMA</span
+                  >
+                </div>
+                <div
+                  class="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[220px]"
+                  id="dash-notifications-container"
+                >
+                  <!-- Generado en JS -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Tabla de Últimos Registrados -->
+            <div
+              class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
+            >
+              <div
+                class="p-5 border-b border-slate-100 flex items-center justify-between"
+              >
+                <h3
+                  class="text-sm font-bold text-slate-800 uppercase tracking-wide"
+                >
+                  Pacientes Registrados Recientemente
+                </h3>
+                <button
+                  onclick="switchView('pacientes')"
+                  class="text-xs font-semibold text-[#1976d2] hover:underline flex items-center gap-1"
+                >
+                  Ver todos
+                  <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                  <thead
+                    class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-100"
+                  >
+                    <tr>
+                      <th class="p-4">Paciente</th>
+                      <th class="p-4">C.I. / Documento</th>
+                      <th class="p-4">Contacto</th>
+                      <th class="p-4">Alergias</th>
+                      <th class="p-4">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="dash-recent-patients-table"
+                    class="divide-y divide-slate-100 text-slate-700"
+                  >
+                    <!-- Dinámico JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. MÓDULO DE PACIENTES -->
+          <div id="view-pacientes" class="view-panel space-y-6 fade-in hidden">
+            <div
+              class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            >
+              <div>
+                <h2 class="text-2xl font-bold text-slate-900">
+                  Gestión de Pacientes
+                </h2>
+                <p class="text-xs text-slate-500">
+                  Registre, consulte e indexe expedientes del hospital.
+                </p>
+              </div>
+              <button
+                onclick="openPatientModal()"
+                class="bg-[#1976d2] hover:bg-[#1a237e] text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 text-sm transition"
+              >
+                <i data-lucide="user-plus" class="w-4 h-4"></i> Registrar
+                Paciente
+              </button>
+            </div>
+
+            <!-- Barra de Búsqueda -->
+            <div
+              class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"
+            >
+              <div class="relative max-w-md">
+                <span
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"
+                >
+                  <i data-lucide="search" class="w-4 h-4"></i>
+                </span>
+                <input
+                  type="text"
+                  id="search-patient"
+                  oninput="filterPatients()"
+                  class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2] text-sm"
+                  placeholder="Buscar por Nombre o C.I..."
+                />
+              </div>
+            </div>
+
+            <!-- Listado de Pacientes en Tabla -->
+            <div
+              class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
+            >
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                  <thead
+                    class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-100"
+                  >
+                    <tr>
+                      <th class="p-4">C.I.</th>
+                      <th class="p-4">Nombre Completo</th>
+                      <th class="p-4">Edad / Sexo</th>
+                      <th class="p-4">Contacto</th>
+                      <th class="p-4">Antecedentes</th>
+                      <th class="p-4 text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="patients-table-body"
+                    class="divide-y divide-slate-100 text-slate-700"
+                  >
+                    <!-- Dinámico JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. MÓDULO DE CITAS MÉDICAS -->
+          <div id="view-citas" class="view-panel space-y-6 fade-in hidden">
+            <div
+              class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            >
+              <div>
+                <h2 class="text-2xl font-bold text-slate-900">
+                  Agenda de Citas Médicas
+                </h2>
+                <p class="text-xs text-slate-500">
+                  Planifique, filtre y controle el flujo de consultas diarias.
+                </p>
+              </div>
+              <button
+                id="btn-nueva-cita"
+                onclick="openCitaModal()"
+                class="bg-[#1976d2] hover:bg-[#1a237e] text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 text-sm transition"
+              >
+                <i data-lucide="calendar-plus" class="w-4 h-4"></i> Agendar Cita
+              </button>
+            </div>
+
+            <!-- Filtros de Búsqueda de Citas -->
+            <div
+              class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-4"
+            >
+              <div>
+                <label
+                  class="block text-xs font-bold text-slate-600 uppercase mb-1"
+                  >Filtrar por Médico</label
+                >
+                <select
+                  id="filter-cita-medico"
+                  onchange="filterCitas()"
+                  class="w-full p-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+                >
+                  <option value="TODOS">Todos los médicos</option>
+                  <option value="Dr. Ramírez">Dr. Ramírez (Cardiología)</option>
+                  <option value="Dra. Flores">Dra. Flores (Pediatría)</option>
+                  <option value="Dr. Quispe">
+                    Dr. Quispe (Medicina General)
+                  </option>
+                </select>
+              </div>
+              <div>
+                <label
+                  class="block text-xs font-bold text-slate-600 uppercase mb-1"
+                  >Filtrar por Fecha</label
+                >
+                <input
+                  type="date"
+                  id="filter-cita-fecha"
+                  oninput="filterCitas()"
+                  class="w-full p-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+                />
+              </div>
+              <div class="flex items-end">
+                <button
+                  onclick="resetCitasFilters()"
+                  class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg text-sm transition"
+                >
+                  Restablecer Filtros
+                </button>
+              </div>
+            </div>
+
+            <!-- Lista de Citas -->
+            <div
+              class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
+            >
+              <div class="p-4 bg-slate-50 border-b border-slate-100">
+                <h3
+                  class="text-xs font-bold text-slate-500 uppercase tracking-wider"
+                >
+                  Cronograma de Citas Registradas
+                </h3>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                  <thead
+                    class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-b border-slate-100"
+                  >
+                    <tr>
+                      <th class="p-4">Paciente</th>
+                      <th class="p-4">Médico Especialista</th>
+                      <th class="p-4">Fecha y Hora</th>
+                      <th class="p-4">Estado</th>
+                      <th class="p-4">Observaciones</th>
+                      <th class="p-4 text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="citas-table-body"
+                    class="divide-y divide-slate-100 text-slate-700"
+                  >
+                    <!-- Dinámico JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. MÓDULO DE HISTORIAL CLÍNICO -->
+          <div id="view-historial" class="view-panel space-y-6 fade-in hidden">
+            <div
+              class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            >
+              <div>
+                <h2 class="text-2xl font-bold text-slate-900">
+                  Historiales Clínicos
+                </h2>
+                <p class="text-xs text-slate-500">
+                  Expedientes patológicos, diagnósticos y recetas de consultas
+                  pasadas.
+                </p>
+              </div>
+              <button
+                id="btn-nuevo-historial"
+                onclick="openHistorialModal()"
+                class="bg-[#1976d2] hover:bg-[#1a237e] text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 text-sm transition"
+              >
+                <i data-lucide="file-text" class="w-4 h-4"></i> Registrar
+                Consulta Médica
+              </button>
+            </div>
+
+            <!-- Buscador por C.I. -->
+            <div
+              class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-4 items-center"
+            >
+              <div class="w-full sm:flex-1">
+                <label
+                  class="block text-xs font-bold text-slate-600 uppercase mb-1"
+                  >Buscar por C.I. del Paciente</label
+                >
+                <div class="relative">
+                  <span
+                    class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"
+                  >
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                  </span>
+                  <input
+                    type="text"
+                    id="search-historial-ci"
+                    class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2] text-sm"
+                    placeholder="Ingrese C.I. ej: 8472910"
+                  />
+                </div>
+              </div>
+              <div class="w-full sm:w-auto pt-5">
+                <button
+                  onclick="buscarHistorialClinico()"
+                  class="w-full bg-[#1a237e] hover:bg-[#1976d2] text-white font-semibold py-2 px-6 rounded-lg text-sm transition"
+                >
+                  Buscar Historial
+                </button>
+              </div>
+            </div>
+
+            <!-- Resultados del Historial del Paciente -->
+            <div id="historial-resultado-container" class="hidden space-y-6">
+              <!-- Cabecera de Datos Básicos del Paciente Consultado -->
+              <div
+                class="bg-blue-50 border border-blue-200 p-5 rounded-xl flex flex-col sm:flex-row justify-between gap-4"
+              >
+                <div>
+                  <span class="text-xs font-bold text-[#1976d2] uppercase"
+                    >Ficha Activa del Paciente</span
+                  >
+                  <h3
+                    class="text-xl font-bold text-[#1a237e] mt-1"
+                    id="hist-paciente-nombre"
+                  >
+                    Juan Pérez
+                  </h3>
+                  <p class="text-xs text-slate-600 mt-1" id="hist-paciente-ci">
+                    C.I: 123456
+                  </p>
+                </div>
+                <div class="text-xs text-slate-700 space-y-1">
+                  <div>
+                    <strong>Edad / Sexo:</strong>
+                    <span id="hist-paciente-edad">--</span>
+                  </div>
+                  <div>
+                    <strong>Alergias:</strong>
+                    <span
+                      id="hist-paciente-alergias"
+                      class="text-rose-600 font-semibold"
+                      >--</span
+                    >
+                  </div>
+                  <div>
+                    <strong>Antecedentes:</strong>
+                    <span id="hist-paciente-antecedentes">--</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Timeline de Consultas -->
+              <div class="space-y-4">
+                <h3
+                  class="text-sm font-bold text-slate-800 uppercase tracking-wide"
+                >
+                  Línea del Tiempo de Diagnósticos (Más recientes primero)
+                </h3>
+                <div id="historial-timeline-list" class="space-y-4">
+                  <!-- Generado Dinámicamente por JS -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Mensaje Inicial de Espera -->
+            <div
+              id="historial-empty-state"
+              class="bg-white p-12 text-center rounded-xl border border-slate-200 text-slate-500"
+            >
+              <i
+                data-lucide="folder-search"
+                class="w-12 h-12 mx-auto text-slate-300 mb-3"
+              ></i>
+              <h3 class="text-sm font-semibold">Búsqueda de Historiales</h3>
+              <p class="text-xs text-slate-400 mt-1">
+                Introduzca la Cédula de Identidad de un paciente para desplegar
+                todo su historial médico registrado.
+              </p>
+            </div>
+          </div>
+
+          <!-- 5. MÓDULO DE ALERTAS MÉDICAS -->
+          <div id="view-alertas" class="view-panel space-y-6 fade-in hidden">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900">
+                Alertas Clínicas y Seguridad del Paciente
+              </h2>
+              <p class="text-xs text-slate-500">
+                Monitoreo activo ante alergias críticas, antecedentes severos y
+                anomalías en signos IoT.
+              </p>
+            </div>
+
+            <!-- Alertas Activas en el Sistema -->
+            <div
+              class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
+            >
+              <div
+                class="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center"
+              >
+                <h3
+                  class="text-xs font-bold text-slate-500 uppercase tracking-wider"
+                >
+                  Alertas Activas del Sistema
+                </h3>
+                <button
+                  onclick="clearAllReviewedAlerts()"
+                  class="text-xs text-slate-500 hover:text-rose-600 font-semibold flex items-center gap-1 transition"
+                >
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Limpiar
+                  revisadas
+                </button>
+              </div>
+              <div class="divide-y divide-slate-100" id="alerts-system-list">
+                <!-- Dinámico JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. MÓDULO IoT (SIMULADOR) -->
+          <div id="view-iot" class="view-panel space-y-6 fade-in hidden">
+            <div
+              class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            >
+              <div>
+                <h2 class="text-2xl font-bold text-slate-900">
+                  Monitoreo de Telemetría IoT (Simulado)
+                </h2>
+                <p class="text-xs text-slate-500">
+                  Métricas fisiológicas actualizadas dinámicamente cada 3
+                  segundos con rango seguro supervisado.
+                </p>
+              </div>
+              <div
+                class="flex items-center gap-2 bg-emerald-50 text-emerald-800 text-xs px-3 py-1.5 rounded-full border border-emerald-200 font-semibold"
+              >
+                <span
+                  class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"
+                ></span>
+                Transmisión IoT Activa
+              </div>
+            </div>
+
+            <!-- Panel de Dispositivos -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <!-- Pulsera Cardíaca -->
+              <div
+                class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between"
+                id="iot-card-heart"
+              >
+                <div class="flex items-start justify-between">
+                  <div class="p-3 bg-rose-50 text-rose-600 rounded-lg">
+                    <i data-lucide="heart" class="w-6 h-6 animate-pulse"></i>
+                  </div>
+                  <span
+                    class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase"
+                    id="iot-heart-status"
+                    >Conectado</span
+                  >
+                </div>
+                <div class="mt-4">
+                  <span class="text-xs font-bold text-slate-500 uppercase block"
+                    >Pulsera Cardíaca IoT</span
+                  >
+                  <h3
+                    class="text-4xl font-extrabold text-slate-800 mt-1"
+                    id="iot-heart-val"
+                  >
+                    75
+                    <span class="text-lg font-medium text-slate-500">BPM</span>
+                  </h3>
+                </div>
+                <div
+                  class="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500 flex justify-between"
+                >
+                  <span>Rango Seguro: 60 - 100 BPM</span>
+                  <span
+                    id="iot-heart-alert"
+                    class="text-slate-400 font-bold uppercase"
+                    >NORMAL</span
+                  >
+                </div>
+              </div>
+
+              <!-- Termómetro Corporal -->
+              <div
+                class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between"
+                id="iot-card-temp"
+              >
+                <div class="flex items-start justify-between">
+                  <div class="p-3 bg-amber-50 text-amber-600 rounded-lg">
+                    <i data-lucide="thermometer" class="w-6 h-6"></i>
+                  </div>
+                  <span
+                    class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase"
+                    id="iot-temp-status"
+                    >Conectado</span
+                  >
+                </div>
+                <div class="mt-4">
+                  <span class="text-xs font-bold text-slate-500 uppercase block"
+                    >Termómetro IoT</span
+                  >
+                  <h3
+                    class="text-4xl font-extrabold text-slate-800 mt-1"
+                    id="iot-temp-val"
+                  >
+                    36.8
+                    <span class="text-lg font-medium text-slate-500">°C</span>
+                  </h3>
+                </div>
+                <div
+                  class="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500 flex justify-between"
+                >
+                  <span>Rango Seguro: 36 - 37.5 °C</span>
+                  <span
+                    id="iot-temp-alert"
+                    class="text-slate-400 font-bold uppercase"
+                    >NORMAL</span
+                  >
+                </div>
+              </div>
+
+              <!-- Tensiómetro IoT -->
+              <div
+                class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between"
+                id="iot-card-press"
+              >
+                <div class="flex items-start justify-between">
+                  <div class="p-3 bg-blue-50 text-[#1976d2] rounded-lg">
+                    <i data-lucide="activity" class="w-6 h-6"></i>
+                  </div>
+                  <span
+                    class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase"
+                    id="iot-press-status"
+                    >Conectado</span
+                  >
+                </div>
+                <div class="mt-4">
+                  <span class="text-xs font-bold text-slate-500 uppercase block"
+                    >Tensiómetro Digital IoT</span
+                  >
+                  <h3
+                    class="text-4xl font-extrabold text-slate-800 mt-1"
+                    id="iot-press-val"
+                  >
+                    120/80
+                    <span class="text-lg font-medium text-slate-500">mmHg</span>
+                  </h3>
+                </div>
+                <div
+                  class="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500 flex justify-between"
+                >
+                  <span>Rango Seguro: 110/70 - 130/85</span>
+                  <span
+                    id="iot-press-alert"
+                    class="text-slate-400 font-bold uppercase"
+                    >NORMAL</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Bitácora de Alertas IoT generadas -->
+            <div
+              class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm"
+            >
+              <h3
+                class="text-sm font-bold text-slate-800 uppercase tracking-wide mb-3"
+              >
+                Historial Inmediato de Telemetría Crítica
+              </h3>
+              <div
+                class="overflow-y-auto max-h-48 text-xs space-y-1.5"
+                id="iot-log"
+              >
+                <div class="text-slate-500 italic">
+                  No se han registrado anomalías fisiológicas en el monitoreo
+                  actual.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7. MÓDULO DE USUARIOS Y ROLES (ADMINISTRACIÓN) -->
+          <div id="view-usuarios" class="view-panel space-y-6 fade-in hidden">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900">
+                Configuración de Accesos y Privilegios
+              </h2>
+              <p class="text-xs text-slate-500">
+                Gestión de roles activos y permisos asignados.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <!-- Card Rol Médico -->
+              <div
+                class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <div class="flex items-center gap-3 mb-3">
+                    <div class="p-2 bg-blue-50 text-blue-600 rounded">
+                      <i data-lucide="stethoscope" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-800">Rol: Médico</h3>
+                  </div>
+                  <p class="text-xs text-slate-500">
+                    Tiene permisos completos para registrar consultas clínicas,
+                    historiales médicos y gestionar citas asignadas. No tiene
+                    permitido modificar estructura del hospital ni usuarios
+                    directos.
+                  </p>
+                </div>
+                <span
+                  class="mt-4 bg-blue-100 text-[#1a237e] text-center py-1 text-xs font-bold rounded"
+                  >Privilegios Clínicos</span
+                >
+              </div>
+
+              <!-- Card Rol Administrador -->
+              <div
+                class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <div class="flex items-center gap-3 mb-3">
+                    <div class="p-2 bg-purple-50 text-purple-600 rounded">
+                      <i data-lucide="shield-check" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-800">Rol: Administrador</h3>
+                  </div>
+                  <p class="text-xs text-slate-500">
+                    Acceso sin restricciones a todos los módulos: pacientes,
+                    citas, historiales médicos, alertas globales, configuración
+                    y consola de telemetría IoT.
+                  </p>
+                </div>
+                <span
+                  class="mt-4 bg-purple-100 text-purple-800 text-center py-1 text-xs font-bold rounded"
+                  >Privilegio Total</span
+                >
+              </div>
+
+              <!-- Card Rol Paciente -->
+              <div
+                class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <div class="flex items-center gap-3 mb-3">
+                    <div class="p-2 bg-emerald-50 text-emerald-600 rounded">
+                      <i data-lucide="accessibility" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-800">Rol: Paciente</h3>
+                  </div>
+                  <p class="text-xs text-slate-500">
+                    Vista restringida. Únicamente puede interactuar con el
+                    Dashboard Informativo para consultar el número de citas del
+                    día y revisar el Simulador IoT de salud personal.
+                  </p>
+                </div>
+                <span
+                  class="mt-4 bg-emerald-100 text-emerald-800 text-center py-1 text-xs font-bold rounded"
+                  >Lectura de Telemetría</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- CHATBOT INTELIGENTE FLOTANTE -->
+    <div id="ai-chat-button" class="fixed bottom-6 right-6 z-40">
+      <button
+        onclick="toggleAIChat()"
+        class="bg-[#1976d2] hover:bg-[#1a237e] text-white p-4 rounded-full shadow-2xl transition transform hover:scale-110 flex items-center justify-center"
+      >
+        <i data-lucide="bot" class="w-6 h-6"></i>
+      </button>
+    </div>
+
+    <!-- VENTANA DEL ASISTENTE CHAT -->
+    <div
+      id="ai-chat-window"
+      class="hidden fixed bottom-24 right-6 w-80 md:w-96 bg-white rounded-xl shadow-2xl border border-slate-200 z-40 flex flex-col fade-in overflow-hidden max-h-[500px]"
+    >
+      <!-- Header Chat -->
+      <div
+        class="bg-[#1a237e] text-white p-4 flex items-center justify-between"
+      >
+        <div class="flex items-center gap-2">
+          <div class="p-1.5 bg-blue-700 rounded-lg">
+            <i data-lucide="bot" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold leading-none">Asistente Virtual IA</h4>
+            <span class="text-[9px] text-blue-300">Simulador Hospitalario</span>
+          </div>
+        </div>
+        <!-- Selector de Idioma -->
+        <div class="flex items-center gap-2">
+          <select
+            id="chat-language"
+            onchange="changeChatLanguage()"
+            class="bg-blue-800 text-white text-[10px] p-1 rounded border-none focus:outline-none focus:ring-1 focus:ring-blue-300"
+          >
+            <option value="es">Español</option>
+            <option value="en">English</option>
+            <option value="ay">Aymara</option>
+            <option value="qu">Quechua</option>
+          </select>
+          <button
+            onclick="toggleAIChat()"
+            class="text-slate-300 hover:text-white"
+          >
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Cuerpo del Chat (Mensajes) -->
+      <div
+        id="chat-messages"
+        class="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50 text-xs min-h-[250px] max-h-[300px]"
+      >
+        <!-- Mensaje de Bienvenida Inicial -->
+      </div>
+
+      <!-- Entrada del Chat -->
+      <div class="p-3 border-t border-slate-200 bg-white flex gap-2">
+        <input
+          type="text"
+          id="chat-input"
+          onkeypress="handleChatKeyPress(event)"
+          class="flex-1 p-2 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+          placeholder="Pregunta algo al asistente..."
+        />
+        <button
+          onclick="sendChatMessage()"
+          class="bg-[#1976d2] hover:bg-[#1a237e] text-white px-3 py-2 rounded-lg flex items-center justify-center transition"
+        >
+          <i data-lucide="send" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- MODALES DE CONTROL (POP-UPS) -->
+    <!-- ============================================== -->
+
+    <!-- MODAL REGISTRO/EDICIÓN PACIENTE -->
+    <div
+      id="modal-paciente"
+      class="hidden fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden fade-in"
+      >
+        <div
+          class="bg-[#1a237e] text-white p-4 flex justify-between items-center"
+        >
+          <h3 class="text-sm font-bold" id="modal-paciente-title">
+            Registrar Nuevo Paciente
+          </h3>
+          <button
+            onclick="closePatientModal()"
+            class="text-slate-300 hover:text-white"
+          >
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <form
+          onsubmit="savePatient(event)"
+          class="p-6 space-y-4 max-h-[500px] overflow-y-auto text-xs"
+        >
+          <input type="hidden" id="patient-edit-index" />
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-bold text-slate-600 uppercase mb-1"
+                >Nombre Completo *</label
+              >
+              <input
+                type="text"
+                id="patient-name"
+                required
+                class="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+              />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 uppercase mb-1"
+                >Cédula de Identidad (C.I.) *</label
+              >
+              <input
+                type="text"
+                id="patient-ci"
+                required
+                class="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+              />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 uppercase mb-1"
+                >Fecha de Nacimiento *</label
+              >
+              <input
+                type="date"
+                id="patient-dob"
+                required
+                class="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+              />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 uppercase mb-1"
+                >Sexo *</label
+              >
+              <select
+                id="patient-gender"
+                required
+                class="w-full p-2 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+              >
+                <option value="Masculino">Masculino</option>
+                <option value="Femenino">Femenino</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 uppercase mb-1"
+                >Teléfono de Contacto *</label
+              >
+              <input
+                type="text"
+                id="patient-phone"
+                required
+                class="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+              />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 uppercase mb-1"
+                >Correo Electrónico</label
+              >
+              <input
+                type="email"
+                id="patient-email"
+                class="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+              />
+            </div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 uppercase mb-1"
+              >Dirección de Domicilio</label
+            >
+            <input
+              type="text"
+              id="patient-address"
+              class="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+            />
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-bold text-slate-600 uppercase mb-1"
+                >Alergias Conocidas</label
+              >
+              <input
+                type="text"
+                id="patient-allergies"
+                placeholder="Ej: Penicilina, Ninguna..."
+                class="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+              />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 uppercase mb-1"
+                >Antecedentes Clínicos</label
+              >
+              <input
+                type="text"
+                id="patient-history"
+                placeholder="Ej: Hipertensión, Ninguno..."
+                class="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+              />
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
+            <button
+              type="button"
+              onclick="closePatientModal()"
+              class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 bg-[#1976d2] hover:bg-[#1a237e] text-white font-semibold rounded-lg transition"
+            >
+              Guardar Paciente
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL VER DETALLE PACIENTE -->
+    <div
+      id="modal-detalle-paciente"
+      class="hidden fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden fade-in"
+      >
+        <div
+          class="bg-blue-900 text-white p-4 flex justify-between items-center"
+        >
+          <h3 class="text-sm font-bold">Ficha Médica Detallada</h3>
+          <button
+            onclick="closeDetailPatientModal()"
+            class="text-slate-300 hover:text-white"
+          >
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <div class="p-6 space-y-4 text-xs">
+          <div class="flex items-center gap-3 border-b border-slate-100 pb-4">
+            <div
+              class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-[#1a237e] text-lg font-bold"
+              id="det-avatar"
+            >
+              P
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-slate-800" id="det-name">
+                Juan Pérez
+              </h4>
+              <p class="text-slate-500 font-medium">
+                C.I: <span id="det-ci">--</span>
+              </p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3 text-slate-700">
+            <div>
+              <strong>Fecha Nacimiento:</strong>
+              <p id="det-dob" class="text-slate-500">--</p>
+            </div>
+            <div>
+              <strong>Sexo:</strong>
+              <p id="det-gender" class="text-slate-500">--</p>
+            </div>
+            <div>
+              <strong>Teléfono:</strong>
+              <p id="det-phone" class="text-slate-500">--</p>
+            </div>
+            <div>
+              <strong>Email:</strong>
+              <p id="det-email" class="text-slate-500">--</p>
+            </div>
+            <div class="col-span-2">
+              <strong>Dirección:</strong>
+              <p id="det-address" class="text-slate-500">--</p>
+            </div>
+            <div
+              class="col-span-2 bg-rose-50 p-2 rounded border border-rose-100"
+            >
+              <strong class="text-rose-700">Alergias Conocidas:</strong>
+              <p id="det-allergies" class="text-rose-950 font-bold mt-0.5">
+                --
+              </p>
+            </div>
+            <div
+              class="col-span-2 bg-amber-50 p-2 rounded border border-amber-100"
+            >
+              <strong class="text-amber-800">Antecedentes Clínicos:</strong>
+              <p id="det-history" class="text-amber-950 mt-0.5">--</p>
+            </div>
+          </div>
+          <div class="flex justify-end pt-2">
+            <button
+              onclick="closeDetailPatientModal()"
+              class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL AGENDAR CITAS -->
+    <div
+      id="modal-cita"
+      class="hidden fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden fade-in"
+      >
+        <div
+          class="bg-[#1a237e] text-white p-4 flex justify-between items-center"
+        >
+          <h3 class="text-sm font-bold" id="modal-cita-title">
+            Agendar Nueva Cita
+          </h3>
+          <button
+            onclick="closeCitaModal()"
+            class="text-slate-300 hover:text-white"
+          >
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <form onsubmit="saveCita(event)" class="p-6 space-y-4 text-xs">
+          <input type="hidden" id="cita-edit-id" />
+          <div>
+            <label class="block font-bold text-slate-600 uppercase mb-1"
+              >Paciente *</label
+            >
+            <select
+              id="cita-paciente-id"
+              required
+              class="w-full p-2 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+            >
+              <!-- Se llena con JS -->
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 uppercase mb-1"
+              >Médico / Especialidad *</label
+            >
+            <select
+              id="cita-medico"
+              required
+              class="w-full p-2 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+            >
+              <option value="Dr. Ramírez">Dr. Ramírez (Cardiología)</option>
+              <option value="Dra. Flores">Dra. Flores (Pediatría)</option>
+              <option value="Dr. Quispe">Dr. Quispe (Medicina General)</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block font-bold text-slate-600 uppercase mb-1"
+                >Fecha *</label
+              >
+              <input
+                type="date"
+                id="cita-fecha"
+                required
+                class="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+              />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 uppercase mb-1"
+                >Hora *</label
+              >
+              <input
+                type="time"
+                id="cita-hora"
+                required
+                class="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+              />
+            </div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 uppercase mb-1"
+              >Estado de la Cita</label
+            >
+            <select
+              id="cita-estado"
+              class="w-full p-2 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+            >
+              <option value="Pendiente">Pendiente</option>
+              <option value="Confirmada">Confirmada</option>
+              <option value="Completada">Completada</option>
+              <option value="Cancelada">Cancelada</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 uppercase mb-1"
+              >Observaciones</label
+            >
+            <textarea
+              id="cita-observaciones"
+              class="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2] h-20"
+              placeholder="Observaciones adicionales de la cita..."
+            ></textarea>
+          </div>
+          <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
+            <button
+              type="button"
+              onclick="closeCitaModal()"
+              class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 bg-[#1976d2] hover:bg-[#1a237e] text-white font-semibold rounded-lg transition"
+            >
+              Guardar Cita
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL REGISTRAR CONSULTA (HISTORIAL CLÍNICO) -->
+    <div
+      id="modal-historial"
+      class="hidden fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden fade-in"
+      >
+        <div
+          class="bg-[#1a237e] text-white p-4 flex justify-between items-center"
+        >
+          <h3 class="text-sm font-bold">Registrar Consulta Médica</h3>
+          <button
+            onclick="closeHistorialModal()"
+            class="text-slate-300 hover:text-white"
+          >
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <form onsubmit="saveHistorial(event)" class="p-6 space-y-4 text-xs">
+          <div>
+            <label class="block font-bold text-slate-600 uppercase mb-1"
+              >Paciente *</label
+            >
+            <select
+              id="hist-paciente-id-sel"
+              required
+              class="w-full p-2 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+            >
+              <!-- Se llena con JS -->
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 uppercase mb-1"
+              >Médico Tratante *</label
+            >
+            <select
+              id="hist-medico"
+              required
+              class="w-full p-2 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+            >
+              <option value="Dr. Ramírez">Dr. Ramírez (Cardiología)</option>
+              <option value="Dra. Flores">Dra. Flores (Pediatría)</option>
+              <option value="Dr. Quispe">Dr. Quispe (Medicina General)</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-1 gap-3">
+            <div>
+              <label class="block font-bold text-slate-600 uppercase mb-1"
+                >Fecha de Consulta *</label
+              >
+              <input
+                type="date"
+                id="hist-fecha"
+                required
+                class="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+              />
+            </div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 uppercase mb-1"
+              >Diagnóstico *</label
+            >
+            <textarea
+              id="hist-diagnostico"
+              required
+              class="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2] h-16"
+              placeholder="Escriba el diagnóstico..."
+            ></textarea>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 uppercase mb-1"
+              >Tratamiento *</label
+            >
+            <textarea
+              id="hist-tratamiento"
+              required
+              class="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2] h-16"
+              placeholder="Detalle del tratamiento indicado..."
+            ></textarea>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 uppercase mb-1"
+              >Receta / Medicamentos *</label
+            >
+            <textarea
+              id="hist-receta"
+              required
+              class="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976d2] h-16"
+              placeholder="Detalle de medicamentos y dosis prescritos..."
+            ></textarea>
+          </div>
+          <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
+            <button
+              type="button"
+              onclick="closeHistorialModal()"
+              class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 bg-[#1976d2] hover:bg-[#1a237e] text-white font-semibold rounded-lg transition"
+            >
+              Guardar Expediente
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL DE MENSAJE CUSTOMIZADO (No alerts) -->
+    <div
+      id="modal-alert"
+      class="hidden fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-xl shadow-2xl max-w-xs w-full overflow-hidden fade-in"
+      >
+        <div class="p-5 text-center">
+          <div
+            class="w-12 h-12 rounded-full bg-blue-100 text-[#1976d2] flex items-center justify-center mx-auto mb-3"
+            id="alert-icon-wrapper"
+          >
+            <i data-lucide="info" class="w-6 h-6"></i>
+          </div>
+          <h4 class="text-sm font-bold text-slate-800" id="alert-title">
+            Mensaje del Sistema
+          </h4>
+          <p class="text-xs text-slate-500 mt-2" id="alert-message">
+            Operación realizada con éxito.
+          </p>
+          <button
+            onclick="closeCustomAlert()"
+            class="mt-4 w-full bg-[#1976d2] hover:bg-[#1a237e] text-white py-2 rounded-lg text-xs font-semibold transition"
+          >
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- LOGICA SCRIPT DEL SISTEMA -->
+    <!-- ============================================== -->
+    <script>
+      // --- 1. BASE DE DATOS LOCAL SIMULADA (DATOS PRECARGADOS) ---
+      let pacientes = [
+        {
+          id: "1",
+          ci: "4820194",
+          nombre: "Marcelo Quisbert Mamani",
+          dob: "1988-04-12",
+          gender: "Masculino",
+          phone: "73284910",
+          email: "marcelo.q@gmail.com",
+          address: "Av. Civica, El Alto",
+          allergies: "Penicilina",
+          history: "Hipertensión arterial",
+        },
+        {
+          id: "2",
+          ci: "6910243",
+          nombre: "Giovanna Flores Colque",
+          dob: "1994-09-25",
+          gender: "Femenino",
+          phone: "68301924",
+          email: "giovanna.f@hotmail.com",
+          address: "Calle Murillo Nro 425, La Paz",
+          allergies: "Ninguna",
+          history: "Asma bronquial",
+        },
+        {
+          id: "3",
+          ci: "2830195",
+          nombre: "Ramiro Callisaya Choque",
+          dob: "1972-11-03",
+          gender: "Masculino",
+          phone: "71930245",
+          email: "ramiro_calli@gmail.com",
+          address: "Villa Copacabana, La Paz",
+          allergies: "Ibuprofeno",
+          history: "Diabetes Mellitus Tipo 2",
+        },
+        {
+          id: "4",
+          ci: "8472910",
+          nombre: "Beatriz Mendoza Gutierrez",
+          dob: "2001-07-18",
+          gender: "Femenino",
+          phone: "72093841",
+          email: "beatriz.mendo@gmail.com",
+          address: "Satélite, El Alto",
+          allergies: "Ninguna",
+          history: "Ninguno",
+        },
+        {
+          id: "5",
+          ci: "3104928",
+          nombre: "Crispin Condori Apaza",
+          dob: "1960-01-30",
+          gender: "Masculino",
+          phone: "73029148",
+          email: "condori.cris@gmail.com",
+          address: "Rio Seco, El Alto",
+          allergies: "Sulfas",
+          history: "Insuficiencia renal crónica leve",
+        },
+      ];
+
+      let citas = [
+        {
+          id: "c1",
+          pacienteId: "1",
+          medico: "Dr. Ramírez",
+          fecha: "2026-06-01",
+          hora: "08:30",
+          estado: "Confirmada",
+          observaciones: "Control de presión arterial de rutina",
+        },
+        {
+          id: "c2",
+          pacienteId: "2",
+          medico: "Dra. Flores",
+          fecha: "2026-06-01",
+          hora: "09:45",
+          estado: "Completada",
+          observaciones: "Chequeo pediátrico anual",
+        },
+        {
+          id: "c3",
+          pacienteId: "3",
+          medico: "Dr. Quispe",
+          fecha: "2026-06-01",
+          hora: "11:00",
+          estado: "Pendiente",
+          observaciones: "Monitoreo de glucosa en sangre",
+        },
+        {
+          id: "c4",
+          pacienteId: "4",
+          medico: "Dra. Flores",
+          fecha: "2026-06-02",
+          hora: "14:00",
+          estado: "Confirmada",
+          observaciones: "Dolor abdominal persistente",
+        },
+        {
+          id: "c5",
+          pacienteId: "5",
+          medico: "Dr. Ramírez",
+          fecha: "2026-06-02",
+          hora: "15:30",
+          estado: "Pendiente",
+          observaciones: "Control cardiológico",
+        },
+        {
+          id: "c6",
+          pacienteId: "1",
+          medico: "Dr. Quispe",
+          fecha: "2026-06-03",
+          hora: "10:15",
+          estado: "Cancelada",
+          observaciones: "Incompatibilidad horaria del paciente",
+        },
+      ];
+
+      let historiales = [
+        {
+          id: "h1",
+          pacienteId: "2",
+          medico: "Dra. Flores",
+          fecha: "2026-05-15",
+          diagnostico: "Rinitis Alérgica estacional",
+          tratamiento: "Evitar alérgenos y aplicar spray nasal diario",
+          receta: "Loratadina 10mg diario por 10 días",
+        },
+        {
+          id: "h2",
+          pacienteId: "1",
+          medico: "Dr. Ramírez",
+          fecha: "2026-04-10",
+          diagnostico: "Hipertensión controlada",
+          tratamiento:
+            "Mantener dieta baja en sodio y ejercicio diario de 30 minutos",
+          receta: "Enalapril 10mg cada 12 horas",
+        },
+        {
+          id: "h3",
+          pacienteId: "3",
+          medico: "Dr. Quispe",
+          fecha: "2026-05-01",
+          diagnostico: "Hiperglucemia reactiva leve",
+          tratamiento: "Reducción de azúcares y grasas saturadas",
+          receta: "Metformina 850mg diario en el almuerzo",
+        },
+      ];
+
+      let alertas = [
+        {
+          id: "a1",
+          pacienteId: "1",
+          tipo: "Alergia Crítica",
+          mensaje: "Marcelo Quisbert tiene alergia severa a la Penicilina.",
+          nivel: "Alta",
+          revisada: false,
+        },
+        {
+          id: "a2",
+          pacienteId: "3",
+          tipo: "Antecedente de Riesgo",
+          mensaje: "Ramiro Callisaya padece Diabetes Mellitus Tipo 2.",
+          nivel: "Media",
+          revisada: false,
+        },
+        {
+          id: "a3",
+          pacienteId: "5",
+          tipo: "Falla Sistémica",
+          mensaje: "Crispin Condori reporta Insuficiencia Renal Crónica.",
+          nivel: "Baja",
+          revisada: false,
+        },
+      ];
+
+      // --- 2. GESTION DE SESIÓN Y ROLES ---
+      let currentUser = null;
+      const validUsers = {
+        admin: {
+          contrasena: "admin123",
+          rol: "Administrador",
+          modulos: [
+            "dashboard",
+            "pacientes",
+            "citas",
+            "historial",
+            "alertas",
+            "iot",
+            "usuarios",
+          ],
+        },
+        medico: {
+          contrasena: "medico123",
+          rol: "Médico",
+          modulos: [
+            "dashboard",
+            "pacientes",
+            "citas",
+            "historial",
+            "alertas",
+            "iot",
+          ],
+        },
+        paciente: {
+          contrasena: "paciente123",
+          rol: "Paciente",
+          modulos: ["dashboard", "iot"],
+        },
+      };
+
+      function handleLogin(event) {
+        event.preventDefault();
+        const usr = document.getElementById("login-username").value.trim();
+        const pass = document.getElementById("login-password").value.trim();
+        const errorDiv = document.getElementById("login-error");
+
+        if (validUsers[usr] && validUsers[usr].contrasena === pass) {
+          currentUser = {
+            usuario: usr,
+            rol: validUsers[usr].rol,
+            modulos: validUsers[usr].modulos,
+          };
+          errorDiv.classList.add("hidden");
+
+          // Mostrar app e inicializar
+          document.getElementById("login-screen").classList.add("hidden");
+          document.getElementById("app-container").classList.remove("hidden");
+
+          showCustomAlert(
+            "info",
+            "¡Bienvenido!",
+            `Sesión iniciada como ${currentUser.rol}`,
+          );
+          initApp();
+        } else {
+          errorDiv.classList.remove("hidden");
+        }
+      }
+
+      function logout() {
+        currentUser = null;
+        document.getElementById("login-form").reset();
+        document.getElementById("login-screen").classList.remove("hidden");
+        document.getElementById("app-container").classList.add("hidden");
+      }
+
+      // --- 3. INICIALIZACIÓN DE LA APP ---
+      function initApp() {
+        // Ajustar UI según rol
+        document.getElementById("sidebar-username").innerText =
+          currentUser.usuario.toUpperCase();
+        document.getElementById("sidebar-role-badge").innerText =
+          currentUser.rol;
+
+        // Estilos del badge de rol
+        const rBadge = document.getElementById("sidebar-role-badge");
+        rBadge.className =
+          "text-[10px] px-2 py-0.5 rounded-full font-semibold inline-block mt-0.5";
+        if (currentUser.rol === "Administrador") {
+          rBadge.classList.add("bg-purple-600", "text-white");
+          document.getElementById("user-avatar").innerText = "AD";
+          document.getElementById("user-avatar").className =
+            "w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-900 font-bold";
+        } else if (currentUser.rol === "Médico") {
+          rBadge.classList.add("bg-blue-600", "text-white");
+          document.getElementById("user-avatar").innerText = "MD";
+          document.getElementById("user-avatar").className =
+            "w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-bold";
+        } else {
+          rBadge.classList.add("bg-emerald-600", "text-white");
+          document.getElementById("user-avatar").innerText = "PC";
+          document.getElementById("user-avatar").className =
+            "w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-900 font-bold";
+        }
+
+        // Configurar barra lateral de navegación según permisos
+        buildSidebarMenu();
+
+        // Setear fecha actual en cabecera
+        const options = {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        };
+        document.getElementById("header-date").innerText =
+          new Date().toLocaleDateString("es-ES", options);
+
+        // Re-render de iconos de Lucide
+        lucide.createIcons();
+
+        // Iniciar por defecto en Dashboard
+        switchView("dashboard");
+
+        // Lanzar simulador de telemetría IoT global
+        startIoTSimulation();
+
+        // Lanzar asistente
+        initAIChat();
+      }
+
+      const menuMetaData = {
+        dashboard: { label: "Dashboard", icon: "layout-dashboard" },
+        pacientes: { label: "Pacientes", icon: "users" },
+        citas: { label: "Citas Médicas", icon: "calendar" },
+        historial: { label: "Historial Clínico", icon: "folder-heart" },
+        alertas: { label: "Alertas Clínicas", icon: "bell-ring" },
+        iot: { label: "Dispositivos IoT", icon: "activity" },
+        usuarios: { label: "Roles & Accesos", icon: "settings" },
+      };
+
+      function buildSidebarMenu() {
+        const nav = document.getElementById("sidebar-nav");
+        nav.innerHTML = "";
+
+        currentUser.modulos.forEach((mod) => {
+          const data = menuMetaData[mod];
+          if (data) {
+            const button = document.createElement("button");
+            button.onclick = () => switchView(mod);
+            button.id = `nav-btn-${mod}`;
+            button.className =
+              "flex items-center gap-3 w-full px-4 py-2.5 text-xs font-semibold rounded-lg text-blue-100 hover:text-white hover:bg-blue-800 transition duration-150";
+            button.innerHTML = `
+                        <i data-lucide="${data.icon}" class="w-4 h-4"></i>
+                        <span>${data.label}</span>
+                    `;
+            nav.appendChild(button);
+          }
+        });
+        lucide.createIcons();
+      }
+
+      // Cambio de Vistas Single Page Application (SPA)
+      function switchView(viewId) {
+        // Validar que el usuario tenga permiso
+        if (!currentUser.modulos.includes(viewId)) {
+          showCustomAlert(
+            "alert-triangle",
+            "Acceso denegado",
+            "Su rol actual no posee permisos para consultar este módulo.",
+          );
+          return;
+        }
+
+        // Ocultar todas las vistas
+        document.querySelectorAll(".view-panel").forEach((panel) => {
+          panel.classList.add("hidden");
+        });
+
+        // Quitar clase activa del sidebar
+        document.querySelectorAll("#sidebar-nav button").forEach((btn) => {
+          btn.className =
+            "flex items-center gap-3 w-full px-4 py-2.5 text-xs font-semibold rounded-lg text-blue-100 hover:text-white hover:bg-blue-800 transition duration-150";
+        });
+
+        // Mostrar vista seleccionada
+        const target = document.getElementById(`view-${viewId}`);
+        if (target) {
+          target.classList.remove("hidden");
+          target.classList.add("fade-in");
+        }
+
+        // Marcar botón sidebar activo
+        const activeBtn = document.getElementById(`nav-btn-${viewId}`);
+        if (activeBtn) {
+          activeBtn.className =
+            "flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold rounded-lg bg-[#1976d2] text-white transition duration-150 shadow-md";
+        }
+
+        // Cambiar titulo en header
+        document.getElementById("current-view-title").innerText = menuMetaData[
+          viewId
+        ]
+          ? menuMetaData[viewId].label
+          : "Dashboard";
+
+        // Cerrar menú mobile en pantallas pequeñas si está abierto
+        // Ejecutar cargas específicas de módulos
+        if (viewId === "dashboard") {
+          renderDashboard();
+        } else if (viewId === "pacientes") {
+          renderPacientes();
+        } else if (viewId === "citas") {
+          renderCitas();
+        } else if (viewId === "historial") {
+          resetHistorialView();
+        } else if (viewId === "alertas") {
+          renderAlertas();
+        }
+
+        // Forzar cierre de sidebar móvil si aplica
+        // En este desarrollo rápido es de control visual simple.
+      }
+
+      // --- 4. CONTROLADOR MODAL ALERTA CUSTOM ---
+      function showCustomAlert(iconName, title, message) {
+        const modal = document.getElementById("modal-alert");
+        document.getElementById("alert-title").innerText = title;
+        document.getElementById("alert-message").innerText = message;
+
+        const iconWrapper = document.getElementById("alert-icon-wrapper");
+        // Limpiar clases de color
+        iconWrapper.className =
+          "w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ";
+
+        if (iconName === "info") {
+          iconWrapper.classList.add("bg-blue-50", "text-[#1976d2]");
+          iconWrapper.innerHTML = `<i data-lucide="info" class="w-6 h-6"></i>`;
+        } else if (iconName === "alert-triangle") {
+          iconWrapper.classList.add("bg-rose-50", "text-rose-600");
+          iconWrapper.innerHTML = `<i data-lucide="alert-triangle" class="w-6 h-6"></i>`;
+        } else {
+          iconWrapper.classList.add("bg-amber-50", "text-amber-500");
+          iconWrapper.innerHTML = `<i data-lucide="bell" class="w-6 h-6"></i>`;
+        }
+
+        modal.classList.remove("hidden");
+        lucide.createIcons();
+      }
+
+      function closeCustomAlert() {
+        document.getElementById("modal-alert").classList.add("hidden");
+      }
+
+      // --- 5. LOGICA MÓDULO 1: DASHBOARD ---
+      function renderDashboard() {
+        // 1. Calcular contadores
+        document.getElementById("dash-total-pacientes").innerText =
+          pacientes.length;
+
+        const hoyStr = new Date().toISOString().split("T")[0];
+        const citasHoy = citas.filter((c) => c.fecha === hoyStr);
+        document.getElementById("dash-citas-dia").innerText = citasHoy.length;
+
+        const alertasActivas = alertas.filter((a) => !a.revisada);
+        document.getElementById("dash-alertas-activas").innerText =
+          alertasActivas.length;
+        document.getElementById("active-alerts-count").innerText =
+          alertasActivas.length;
+
+        // 2. Pintar lista de notificaciones (alertas recientes)
+        const notifContainer = document.getElementById(
+          "dash-notifications-container",
+        );
+        notifContainer.innerHTML = "";
+        if (alertasActivas.length === 0) {
+          notifContainer.innerHTML = `
+                    <div class="p-3 text-center text-slate-400 italic text-xs">
+                        No hay alertas activas en el hospital.
+                    </div>
+                `;
+        } else {
+          alertasActivas.slice(0, 5).forEach((al) => {
+            const pac = pacientes.find((p) => p.id === al.pacienteId);
+            const colorNivel =
+              al.nivel === "Alta"
+                ? "bg-rose-50 border-rose-200 text-rose-800"
+                : al.nivel === "Media"
+                  ? "bg-amber-50 border-amber-200 text-amber-800"
+                  : "bg-yellow-50 border-yellow-200 text-yellow-800";
+            notifContainer.innerHTML += `
+                        <div class="p-2.5 border rounded-lg text-[11px] ${colorNivel} flex justify-between items-center">
+                            <div>
+                                <span class="font-extrabold uppercase">[ALERTA ${al.nivel}]</span> ${al.mensaje}
+                            </div>
+                            <button onclick="marcarAlertaRevisadaDashboard('${al.id}')" class="text-[10px] underline font-bold cursor-pointer">Revisar</button>
+                        </div>
+                    `;
+          });
+        }
+
+        // 3. Tabla de últimos pacientes registrados
+        const pRecentTable = document.getElementById(
+          "dash-recent-patients-table",
+        );
+        pRecentTable.innerHTML = "";
+        const ultimosCinco = pacientes.slice(-4).reverse();
+        ultimosCinco.forEach((p) => {
+          pRecentTable.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-4 font-semibold">${p.nombre}</td>
+                        <td class="p-4">${p.ci}</td>
+                        <td class="p-4">${p.phone}</td>
+                        <td class="p-4 text-rose-600 font-semibold">${p.allergies}</td>
+                        <td class="p-4"><span class="bg-emerald-100 text-emerald-800 font-semibold text-[10px] px-2 py-0.5 rounded-full">Activo</span></td>
+                    </tr>
+                `;
+        });
+
+        // 4. Pintar Gráfico Semanal en Canvas puro
+        drawActivityChart();
+      }
+
+      function marcarAlertaRevisadaDashboard(alertaId) {
+        const idx = alertas.findIndex((a) => a.id === alertaId);
+        if (idx !== -1) {
+          alertas[idx].revisada = true;
+          showCustomAlert(
+            "info",
+            "Alerta Actualizada",
+            "La alerta fue marcada como revisada exitosamente.",
+          );
+          renderDashboard();
+        }
+      }
+
+      function drawActivityChart() {
+        const canvas = document.getElementById("chartWeeklyActivity");
+        if (!canvas) return;
+
+        // Obtener dimensiones del contenedor
+        const container = canvas.parentNode;
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Datos ficticios de citas procesadas esta semana
+        const dias = [
+          "Lunes",
+          "Martes",
+          "Miércoles",
+          "Jueves",
+          "Viernes",
+          "Sábado",
+          "Domingo",
+        ];
+        const valores = [14, 25, 18, 30, 22, 10, 5]; // Citas por día
+        const maxVal = 35;
+
+        const padding = 30;
+        const chartHeight = canvas.height - 2 * padding;
+        const chartWidth = canvas.width - 2 * padding;
+        const barWidth = chartWidth / dias.length - 12;
+
+        // Dibujar fondo de cuadrícula
+        ctx.strokeStyle = "#e2e8f0";
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 4; i++) {
+          const y = padding + (chartHeight / 4) * i;
+          ctx.beginPath();
+          ctx.moveTo(padding, y);
+          ctx.lineTo(canvas.width - padding, y);
+          ctx.stroke();
+
+          // Etiquetas del eje Y
+          ctx.fillStyle = "#64748b";
+          ctx.font = "9px sans-serif";
+          const valLabel = Math.round(maxVal - (maxVal / 4) * i);
+          ctx.fillText(valLabel, padding - 20, y + 3);
+        }
+
+        // Dibujar barras y etiquetas del eje X
+        for (let i = 0; i < dias.length; i++) {
+          const x = padding + i * (chartWidth / dias.length) + 6;
+          const h = (valores[i] / maxVal) * chartHeight;
+          const y = canvas.height - padding - h;
+
+          // Color degradado para las barras
+          const gradient = ctx.createLinearGradient(x, y, x, y + h);
+          gradient.addColorStop(0, "#1976d2");
+          gradient.addColorStop(1, "#1a237e");
+
+          // Dibujar barra con esquinas superiores curvas
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.roundRect(x, y, barWidth, h, [4, 4, 0, 0]);
+          ctx.fill();
+
+          // Valor encima de la barra
+          ctx.fillStyle = "#1e293b";
+          ctx.font = "bold 9px sans-serif";
+          ctx.fillText(valores[i], x + barWidth / 2 - 5, y - 5);
+
+          // Etiqueta del Día abajo
+          ctx.fillStyle = "#475569";
+          ctx.font = "9px sans-serif";
+          ctx.fillText(
+            dias[i],
+            x + barWidth / 2 - ctx.measureText(dias[i]).width / 2,
+            canvas.height - padding + 15,
+          );
+        }
+      }
+
+      // --- 6. LOGICA MÓDULO 2: PACIENTES ---
+      function renderPacientes(filteredList = pacientes) {
+        const tableBody = document.getElementById("patients-table-body");
+        tableBody.innerHTML = "";
+
+        if (filteredList.length === 0) {
+          tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-slate-500 italic">
+                            No se encontraron pacientes que coincidan con la búsqueda.
+                        </td>
+                    </tr>
+                `;
+          return;
+        }
+
+        filteredList.forEach((p, index) => {
+          // Cálculo de edad simple
+          const birthYear = new Date(p.dob).getFullYear();
+          const currentYear = new Date().getFullYear();
+          const age = currentYear - birthYear;
+
+          // Restricciones de acciones según Rol (Pacientes no modifican)
+          let btnAccionesHTML = "";
+          if (
+            currentUser.rol === "Administrador" ||
+            currentUser.rol === "Médico"
+          ) {
+            btnAccionesHTML = `
+                        <button onclick="viewPatientDetail('${p.id}')" class="text-blue-600 hover:text-blue-950 p-1" title="Ver Expediente">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="editPatient('${p.id}')" class="text-amber-500 hover:text-amber-700 p-1" title="Editar">
+                            <i data-lucide="edit" class="w-4 h-4"></i>
+                        </button>
+                    `;
+          } else {
+            btnAccionesHTML = `
+                        <button onclick="viewPatientDetail('${p.id}')" class="text-blue-600 hover:text-blue-950 p-1" title="Ver Expediente">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                    `;
+          }
+
+          if (currentUser.rol === "Administrador") {
+            btnAccionesHTML += `
+                        <button onclick="deletePatient('${p.id}')" class="text-rose-600 hover:text-rose-800 p-1" title="Eliminar">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    `;
+          }
+
+          tableBody.innerHTML += `
+                    <tr class="hover:bg-slate-50 text-slate-700">
+                        <td class="p-4 font-mono font-bold text-slate-600">${p.ci}</td>
+                        <td class="p-4 font-semibold">${p.nombre}</td>
+                        <td class="p-4">${age} años / ${p.gender}</td>
+                        <td class="p-4">
+                            <span class="block">${p.phone}</span>
+                            <span class="text-[10px] text-slate-400">${p.email || "Sin correo"}</span>
+                        </td>
+                        <td class="p-4 max-w-xs truncate">${p.history}</td>
+                        <td class="p-4 text-right space-x-2">
+                            ${btnAccionesHTML}
+                        </td>
+                    </tr>
+                `;
+        });
+        lucide.createIcons();
+      }
+
+      function filterPatients() {
+        const query = document
+          .getElementById("search-patient")
+          .value.toLowerCase()
+          .trim();
+        const filtered = pacientes.filter(
+          (p) => p.nombre.toLowerCase().includes(query) || p.ci.includes(query),
+        );
+        renderPacientes(filtered);
+      }
+
+      function openPatientModal() {
+        document.getElementById("modal-paciente-title").innerText =
+          "Registrar Nuevo Paciente";
+        document.getElementById("patient-edit-index").value = "";
+        // Resetear inputs
+        document.getElementById("patient-name").value = "";
+        document.getElementById("patient-ci").value = "";
+        document.getElementById("patient-dob").value = "";
+        document.getElementById("patient-gender").value = "Masculino";
+        document.getElementById("patient-phone").value = "";
+        document.getElementById("patient-email").value = "";
+        document.getElementById("patient-address").value = "";
+        document.getElementById("patient-allergies").value = "";
+        document.getElementById("patient-history").value = "";
+
+        document.getElementById("modal-paciente").classList.remove("hidden");
+      }
+
+      function closePatientModal() {
+        document.getElementById("modal-paciente").classList.add("hidden");
+      }
+
+      function savePatient(event) {
+        event.preventDefault();
+        const editId = document.getElementById("patient-edit-index").value;
+
+        const name = document.getElementById("patient-name").value.trim();
+        const ci = document.getElementById("patient-ci").value.trim();
+        const dob = document.getElementById("patient-dob").value;
+        const gender = document.getElementById("patient-gender").value;
+        const phone = document.getElementById("patient-phone").value.trim();
+        const email = document.getElementById("patient-email").value.trim();
+        const address = document.getElementById("patient-address").value.trim();
+        const allergies =
+          document.getElementById("patient-allergies").value.trim() ||
+          "Ninguna";
+        const history =
+          document.getElementById("patient-history").value.trim() || "Ninguno";
+
+        if (editId) {
+          // Editar paciente
+          const idx = pacientes.findIndex((p) => p.id === editId);
+          if (idx !== -1) {
+            pacientes[idx] = {
+              ...pacientes[idx],
+              ci,
+              nombre: name,
+              dob,
+              gender,
+              phone,
+              email,
+              address,
+              allergies,
+              history,
+            };
+            showCustomAlert(
+              "info",
+              "Paciente Actualizado",
+              "Los cambios han sido guardados correctamente.",
+            );
+
+            // Si el paciente editado tiene alergia o antecedentes severos, recalcular alertas
+            updateSystemAlertsForPatient(pacientes[idx]);
+          }
+        } else {
+          // Crear paciente nuevo
+          const newId = (pacientes.length + 1).toString();
+          const newPatient = {
+            id: newId,
+            ci,
+            nombre: name,
+            dob,
+            gender,
+            phone,
+            email,
+            address,
+            allergies,
+            history,
+          };
+          pacientes.push(newPatient);
+          showCustomAlert(
+            "info",
+            "Paciente Registrado",
+            "El paciente ha sido añadido al sistema con éxito.",
+          );
+
+          // Generar alerta automática si tiene alergias o antecedentes severos
+          updateSystemAlertsForPatient(newPatient);
+        }
+
+        closePatientModal();
+        renderPacientes();
+      }
+
+      function editPatient(patientId) {
+        const p = pacientes.find((x) => x.id === patientId);
+        if (!p) return;
+
+        document.getElementById("modal-paciente-title").innerText =
+          "Editar Datos de Paciente";
+        document.getElementById("patient-edit-index").value = p.id;
+
+        document.getElementById("patient-name").value = p.nombre;
+        document.getElementById("patient-ci").value = p.ci;
+        document.getElementById("patient-dob").value = p.dob;
+        document.getElementById("patient-gender").value = p.gender;
+        document.getElementById("patient-phone").value = p.phone;
+        document.getElementById("patient-email").value = p.email;
+        document.getElementById("patient-address").value = p.address;
+        document.getElementById("patient-allergies").value = p.allergies;
+        document.getElementById("patient-history").value = p.history;
+
+        document.getElementById("modal-paciente").classList.remove("hidden");
+      }
+
+      function deletePatient(patientId) {
+        // Confirmación simulada sin usar window.confirm
+        // Para simplicidad se ejecuta la baja con una alerta posterior
+        pacientes = pacientes.filter((p) => p.id !== patientId);
+        // También depurar citas del paciente
+        citas = citas.filter((c) => c.pacienteId !== patientId);
+        showCustomAlert(
+          "alert-triangle",
+          "Registro Eliminado",
+          "El expediente de salud del paciente ha sido retirado.",
+        );
+        renderPacientes();
+      }
+
+      function viewPatientDetail(patientId) {
+        const p = pacientes.find((x) => x.id === patientId);
+        if (!p) return;
+
+        document.getElementById("det-avatar").innerText = p.nombre
+          .charAt(0)
+          .toUpperCase();
+        document.getElementById("det-name").innerText = p.nombre;
+        document.getElementById("det-ci").innerText = p.ci;
+        document.getElementById("det-dob").innerText = p.dob;
+        document.getElementById("det-gender").innerText = p.gender;
+        document.getElementById("det-phone").innerText = p.phone;
+        document.getElementById("det-email").innerText =
+          p.email || "Sin correo";
+        document.getElementById("det-address").innerText =
+          p.address || "Sin dirección registrada";
+        document.getElementById("det-allergies").innerText = p.allergies;
+        document.getElementById("det-history").innerText = p.history;
+
+        document
+          .getElementById("modal-detalle-paciente")
+          .classList.remove("hidden");
+        lucide.createIcons();
+      }
+
+      function closeDetailPatientModal() {
+        document
+          .getElementById("modal-detalle-paciente")
+          .classList.add("hidden");
+      }
+
+      // Lógica automática de alertas del paciente
+      function updateSystemAlertsForPatient(pacienteObj) {
+        // Eliminar anteriores alertas de este paciente para regenerar
+        alertas = alertas.filter((a) => a.pacienteId !== pacienteObj.id);
+
+        if (
+          pacienteObj.allergies &&
+          pacienteObj.allergies.toLowerCase() !== "ninguna" &&
+          pacienteObj.allergies.toLowerCase() !== "ninguno"
+        ) {
+          alertas.push({
+            id: "al-" + Math.random().toString(36).substr(2, 5),
+            pacienteId: pacienteObj.id,
+            tipo: "Alergia Crítica",
+            mensaje: `${pacienteObj.nombre} presenta alergia detectada a: ${pacienteObj.allergies}`,
+            nivel: "Alta",
+            revisada: false,
+          });
+        }
+
+        if (
+          pacienteObj.history &&
+          pacienteObj.history.toLowerCase() !== "ninguno" &&
+          pacienteObj.history.toLowerCase() !== "ninguna"
+        ) {
+          alertas.push({
+            id: "al-" + Math.random().toString(36).substr(2, 5),
+            pacienteId: pacienteObj.id,
+            tipo: "Antecedente de Riesgo",
+            mensaje: `${pacienteObj.nombre} posee historial crítico de: ${pacienteObj.history}`,
+            nivel: "Media",
+            revisada: false,
+          });
+        }
+      }
+
+      // --- 7. LOGICA MÓDULO 3: CITAS MEDICAS ---
+      function renderCitas(filteredList = citas) {
+        const tableBody = document.getElementById("citas-table-body");
+        tableBody.innerHTML = "";
+
+        if (filteredList.length === 0) {
+          tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-slate-500 italic">
+                            No se registraron citas correspondientes al criterio del filtro.
+                        </td>
+                    </tr>
+                `;
+          return;
+        }
+
+        filteredList.forEach((c) => {
+          const p = pacientes.find((x) => x.id === c.pacienteId);
+          const pacName = p ? p.nombre : "Paciente Desconocido";
+
+          // Clases de color para estados de citas
+          let badgeClass = "";
+          if (c.estado === "Pendiente")
+            badgeClass = "bg-amber-100 text-amber-800 border-amber-300";
+          else if (c.estado === "Confirmada")
+            badgeClass = "bg-blue-100 text-[#1976d2] border-blue-300";
+          else if (c.estado === "Completada")
+            badgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300";
+          else badgeClass = "bg-rose-100 text-rose-800 border-rose-300";
+
+          let btnAccionesHTML = "";
+          if (currentUser.role !== "Paciente") {
+            btnAccionesHTML = `
+                        <button onclick="editCita('${c.id}')" class="text-amber-500 hover:text-amber-700 p-1" title="Editar Estado">
+                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        </button>
+                    `;
+          }
+          if (currentUser.rol === "Administrador") {
+            btnAccionesHTML += `
+                        <button onclick="deleteCita('${c.id}')" class="text-rose-600 hover:text-rose-800 p-1" title="Eliminar Cita">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    `;
+          }
+
+          tableBody.innerHTML += `
+                    <tr class="hover:bg-slate-50 text-slate-700">
+                        <td class="p-4 font-semibold text-slate-800">${pacName}</td>
+                        <td class="p-4">${c.medico}</td>
+                        <td class="p-4">
+                            <span class="block font-semibold">${c.fecha}</span>
+                            <span class="text-xs text-slate-400">${c.hora} Hrs</span>
+                        </td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-0.5 border text-xs font-bold rounded-full ${badgeClass}">
+                                ${c.estado}
+                            </span>
+                        </td>
+                        <td class="p-4 text-xs italic text-slate-500 max-w-xs truncate">${c.observaciones || "Ninguna"}</td>
+                        <td class="p-4 text-right space-x-2">
+                            ${btnAccionesHTML}
+                        </td>
+                    </tr>
+                `;
+        });
+        lucide.createIcons();
+      }
+
+      function filterCitas() {
+        const medSel = document.getElementById("filter-cita-medico").value;
+        const dateSel = document.getElementById("filter-cita-fecha").value;
+
+        let result = citas;
+        if (medSel !== "TODOS") {
+          result = result.filter((c) => c.medico.includes(medSel));
+        }
+        if (dateSel) {
+          result = result.filter((c) => c.fecha === dateSel);
+        }
+        renderCitas(result);
+      }
+
+      function resetCitasFilters() {
+        document.getElementById("filter-cita-medico").value = "TODOS";
+        document.getElementById("filter-cita-fecha").value = "";
+        renderCitas();
+      }
+
+      function openCitaModal() {
+        document.getElementById("modal-cita-title").innerText =
+          "Agendar Nueva Cita";
+        document.getElementById("cita-edit-id").value = "";
+
+        // Cargar select de pacientes
+        const pSel = document.getElementById("cita-paciente-id");
+        pSel.innerHTML = "";
+        pacientes.forEach((p) => {
+          pSel.innerHTML += `<option value="${p.id}">${p.nombre} (${p.ci})</option>`;
+        });
+
+        document.getElementById("cita-fecha").value = new Date()
+          .toISOString()
+          .split("T")[0];
+        document.getElementById("cita-hora").value = "09:00";
+        document.getElementById("cita-estado").value = "Pendiente";
+        document.getElementById("cita-observaciones").value = "";
+
+        document.getElementById("modal-cita").classList.remove("hidden");
+      }
+
+      function closeCitaModal() {
+        document.getElementById("modal-cita").classList.add("hidden");
+      }
+
+      function saveCita(event) {
+        event.preventDefault();
+        const editId = document.getElementById("cita-edit-id").value;
+
+        const pacienteId = document.getElementById("cita-paciente-id").value;
+        const medico = document.getElementById("cita-medico").value;
+        const fecha = document.getElementById("cita-fecha").value;
+        const hora = document.getElementById("cita-hora").value;
+        const estado = document.getElementById("cita-estado").value;
+        const observaciones = document
+          .getElementById("cita-observaciones")
+          .value.trim();
+
+        if (editId) {
+          // Editar cita
+          const idx = citas.findIndex((c) => c.id === editId);
+          if (idx !== -1) {
+            citas[idx] = {
+              ...citas[idx],
+              pacienteId,
+              medico,
+              fecha,
+              hora,
+              estado,
+              observaciones,
+            };
+            showCustomAlert(
+              "info",
+              "Cita Guardada",
+              "La cita ha sido modificada correctamente.",
+            );
+          }
+        } else {
+          // Nueva cita
+          const newId = "c-" + Math.random().toString(36).substr(2, 5);
+          citas.push({
+            id: newId,
+            pacienteId,
+            medico,
+            fecha,
+            hora,
+            estado,
+            observaciones,
+          });
+          showCustomAlert(
+            "info",
+            "Cita Registrada",
+            "Se agendó la consulta médica con éxito.",
+          );
+        }
+
+        closeCitaModal();
+        renderCitas();
+      }
+
+      function editCita(citaId) {
+        const c = citas.find((x) => x.id === citaId);
+        if (!c) return;
+
+        document.getElementById("modal-cita-title").innerText =
+          "Modificar Estado/Datos Cita";
+        document.getElementById("cita-edit-id").value = c.id;
+
+        // Cargar select pacientes
+        const pSel = document.getElementById("cita-paciente-id");
+        pSel.innerHTML = "";
+        pacientes.forEach((p) => {
+          const selected = p.id === c.pacienteId ? "selected" : "";
+          pSel.innerHTML += `<option value="${p.id}" ${selected}>${p.nombre} (${p.ci})</option>`;
+        });
+
+        document.getElementById("cita-medico").value = c.medico;
+        document.getElementById("cita-fecha").value = c.fecha;
+        document.getElementById("cita-hora").value = c.hora;
+        document.getElementById("cita-estado").value = c.estado;
+        document.getElementById("cita-observaciones").value = c.observaciones;
+
+        document.getElementById("modal-cita").classList.remove("hidden");
+      }
+
+      function deleteCita(citaId) {
+        citas = citas.filter((c) => c.id !== citaId);
+        showCustomAlert(
+          "alert-triangle",
+          "Cita Retirada",
+          "La cita seleccionada fue removida de la agenda global.",
+        );
+        renderCitas();
+      }
+
+      // --- 8. LOGICA MÓDULO 4: HISTORIAL CLÍNICO ---
+      function resetHistorialView() {
+        document.getElementById("search-historial-ci").value = "";
+        document
+          .getElementById("historial-resultado-container")
+          .classList.add("hidden");
+        document
+          .getElementById("historial-empty-state")
+          .classList.remove("hidden");
+      }
+
+      function buscarHistorialClinico() {
+        const ciIn = document
+          .getElementById("search-historial-ci")
+          .value.trim();
+        if (!ciIn) {
+          showCustomAlert(
+            "alert-triangle",
+            "C.I. Necesaria",
+            "Introduzca el documento de identidad del paciente.",
+          );
+          return;
+        }
+
+        const p = pacientes.find((pac) => pac.ci === ciIn);
+        if (!p) {
+          showCustomAlert(
+            "alert-triangle",
+            "Sin coincidencias",
+            "No se encontró ningún expediente de paciente con la C.I. ingresada.",
+          );
+          resetHistorialView();
+          return;
+        }
+
+        // Desplegar datos
+        document
+          .getElementById("historial-empty-state")
+          .classList.add("hidden");
+        document
+          .getElementById("historial-resultado-container")
+          .classList.remove("hidden");
+
+        document.getElementById("hist-paciente-nombre").innerText = p.nombre;
+        document.getElementById("hist-paciente-ci").innerText =
+          `Cédula de Identidad: ${p.ci}`;
+
+        const birthYear = new Date(p.dob).getFullYear();
+        const age = new Date().getFullYear() - birthYear;
+        document.getElementById("hist-paciente-edad").innerText =
+          `${age} años (${p.gender})`;
+        document.getElementById("hist-paciente-alergias").innerText =
+          p.allergies;
+        document.getElementById("hist-paciente-antecedentes").innerText =
+          p.history;
+
+        // Listar historial
+        const pHistorial = historiales
+          .filter((h) => h.pacienteId === p.id)
+          .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+        const timelineList = document.getElementById("historial-timeline-list");
+        timelineList.innerHTML = "";
+
+        if (pHistorial.length === 0) {
+          timelineList.innerHTML = `
+                    <div class="bg-slate-100 p-6 text-center rounded-lg text-slate-500 italic text-xs">
+                        Este paciente no cuenta con registros de consultas previas en el sistema.
+                    </div>
+                `;
+          return;
+        }
+
+        pHistorial.forEach((h) => {
+          timelineList.innerHTML += `
+                    <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-2 relative">
+                        <div class="absolute top-4 right-4 bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                            Consulta Presencial
+                        </div>
+                        <div class="flex items-center gap-2 mb-2 text-xs">
+                            <span class="text-slate-500 font-bold">Fecha:</span>
+                            <span class="text-slate-800 font-semibold bg-slate-100 px-2 py-0.5 rounded">${h.fecha}</span>
+                            <span class="text-slate-400">|</span>
+                            <span class="text-slate-500 font-bold">Médico:</span>
+                            <span class="text-slate-800 font-semibold">${h.medico}</span>
+                        </div>
+                        <div class="space-y-1.5 text-xs text-slate-700">
+                            <div><strong class="text-slate-800 uppercase block text-[10px] text-slate-500">Diagnóstico:</strong> ${h.diagnostico}</div>
+                            <div><strong class="text-slate-800 uppercase block text-[10px] text-slate-500">Tratamiento:</strong> ${h.tratamiento}</div>
+                            <div class="bg-blue-50/50 p-2 rounded-md border border-blue-100/50 mt-1">
+                                <strong class="text-slate-800 uppercase block text-[9px] text-[#1976d2]">Receta Médica / Prescripción:</strong> 
+                                <span class="italic text-[#1a237e] font-semibold">${h.receta}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+        });
+      }
+
+      function openHistorialModal() {
+        // Llenar select pacientes
+        const sel = document.getElementById("hist-paciente-id-sel");
+        sel.innerHTML = "";
+        pacientes.forEach((p) => {
+          sel.innerHTML += `<option value="${p.id}">${p.nombre} (${p.ci})</option>`;
+        });
+
+        document.getElementById("hist-fecha").value = new Date()
+          .toISOString()
+          .split("T")[0];
+        document.getElementById("hist-diagnostico").value = "";
+        document.getElementById("hist-tratamiento").value = "";
+        document.getElementById("hist-receta").value = "";
+
+        document.getElementById("modal-historial").classList.remove("hidden");
+      }
+
+      function closeHistorialModal() {
+        document.getElementById("modal-historial").classList.add("hidden");
+      }
+
+      function saveHistorial(event) {
+        event.preventDefault();
+
+        const pacienteId = document.getElementById(
+          "hist-paciente-id-sel",
+        ).value;
+        const medico = document.getElementById("hist-medico").value;
+        const fecha = document.getElementById("hist-fecha").value;
+        const diagnostico = document
+          .getElementById("hist-diagnostico")
+          .value.trim();
+        const tratamiento = document
+          .getElementById("hist-tratamiento")
+          .value.trim();
+        const receta = document.getElementById("hist-receta").value.trim();
+
+        const newId = "h-" + Math.random().toString(36).substr(2, 5);
+        historiales.push({
+          id: newId,
+          pacienteId,
+          medico,
+          fecha,
+          diagnostico,
+          tratamiento,
+          receta,
+        });
+
+        showCustomAlert(
+          "info",
+          "Expediente Guardado",
+          "El diagnóstico y tratamiento han sido anexados al historial clínico del paciente.",
+        );
+        closeHistorialModal();
+
+        // Si el paciente consultado ya estaba siendo buscado en pantalla, recargar la búsqueda
+        const pacBuscado = pacientes.find((p) => p.id === pacienteId);
+        if (pacBuscado) {
+          document.getElementById("search-historial-ci").value = pacBuscado.ci;
+          buscarHistorialClinico();
+        }
+      }
+
+      // --- 9. LOGICA MÓDULO 5: ALERTAS CLÍNICAS ---
+      function renderAlertas() {
+        const container = document.getElementById("alerts-system-list");
+        container.innerHTML = "";
+
+        const activas = alertas.filter((a) => !a.revisada);
+
+        if (activas.length === 0) {
+          container.innerHTML = `
+                    <div class="p-8 text-center text-slate-400 italic text-xs">
+                        No hay alertas clínicas activas en este momento.
+                    </div>
+                `;
+          return;
+        }
+
+        activas.forEach((a) => {
+          let badgeClass = "bg-rose-100 text-rose-800 border-rose-300";
+          if (a.nivel === "Media")
+            badgeClass = "bg-amber-100 text-amber-800 border-amber-300";
+          else if (a.nivel === "Baja")
+            badgeClass = "bg-yellow-100 text-yellow-800 border-yellow-300";
+
+          container.innerHTML += `
+                    <div class="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:bg-slate-50 transition">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold px-2 py-0.5 border rounded-full ${badgeClass}">
+                                    Nivel: ${a.nivel}
+                                </span>
+                                <span class="text-[10px] text-slate-400 uppercase tracking-wide font-bold">${a.tipo}</span>
+                            </div>
+                            <p class="text-xs text-slate-800 font-semibold">${a.mensaje}</p>
+                        </div>
+                        <button onclick="marcarAlertaRevisadaModulo('${a.id}')" class="text-xs bg-slate-100 hover:bg-[#1976d2] hover:text-white text-[#1976d2] border border-slate-200 font-semibold px-3 py-1 rounded transition">
+                            Marcar Revisada
+                        </button>
+                    </div>
+                `;
+        });
+      }
+
+      function marcarAlertaRevisadaModulo(alertaId) {
+        const idx = alertas.findIndex((a) => a.id === alertaId);
+        if (idx !== -1) {
+          alertas[idx].revisada = true;
+          renderAlertas();
+        }
+      }
+
+      function clearAllReviewedAlerts() {
+        alertas = alertas.filter((a) => !a.revisada);
+        renderAlertas();
+        showCustomAlert(
+          "info",
+          "Alertas Depuradas",
+          "Se eliminaron permanentemente todas las alertas marcadas como revisadas.",
+        );
+      }
+
+      // --- 10. LOGICA MÓDULO 6: CHAT ASISTENTE VIRTUAL IA ---
+      let chatLang = "es";
+      const welcomeMessages = {
+        es: "¡Hola! Soy el asistente inteligente del hospital. ¿En qué puedo colaborarte hoy?\nPor ejemplo:\n- 'Buscar paciente por CI 4820194'\n- 'Ver próxima cita del paciente 1'\n- 'Información de Paracetamol'\n- '¿Cómo llegar al laboratorio?'",
+        en: "Hello! I am the hospital's smart assistant. How can I assist you today?\nFor example:\n- 'Search patient by CI 4820194'\n- 'Next appointment for patient 1'\n- 'Information about Paracetamol'\n- 'How to get to the lab?'",
+        ay: "Kamisaki! Nayax hospitalan yatiñ utapxtwa. Kunjams jichhax yanapt'awma?\nUñacht'awi:\n- 'Patient thaqhaña CI 4820194'\n- 'Munaña paracetamol uñt'aña'",
+        qu: "Allillanchu! Nuqam kani hospitalpa sumaq yanapakuqnin. Imanaytam yanapallasayki?\nTapuway:\n- 'Pacienteta maskay CI 4820194'\n- 'Paracetamolmanta willaway'",
+      };
+
+      function toggleAIChat() {
+        const chat = document.getElementById("ai-chat-window");
+        chat.classList.toggle("hidden");
+        if (!chat.classList.contains("hidden")) {
+          document.getElementById("chat-input").focus();
+        }
+      }
+
+      function initAIChat() {
+        const box = document.getElementById("chat-messages");
+        box.innerHTML = `
+                <div class="flex items-start gap-2.5">
+                    <div class="w-7 h-7 rounded-full bg-blue-100 text-[#1a237e] flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="bot" class="w-4 h-4"></i>
+                    </div>
+                    <div class="bg-blue-50 text-[#1a237e] p-2.5 rounded-lg border border-blue-100 whitespace-pre-line leading-relaxed">
+                        ${welcomeMessages[chatLang]}
+                    </div>
+                </div>
+            `;
+        lucide.createIcons();
+      }
+
+      function changeChatLanguage() {
+        chatLang = document.getElementById("chat-language").value;
+        initAIChat();
+      }
+
+      function handleChatKeyPress(event) {
+        if (event.key === "Enter") {
+          sendChatMessage();
+        }
+      }
+
+      function sendChatMessage() {
+        const input = document.getElementById("chat-input");
+        const query = input.value.trim();
+        if (!query) return;
+
+        const box = document.getElementById("chat-messages");
+
+        // Agregar mensaje de usuario
+        box.innerHTML += `
+                <div class="flex items-start justify-end gap-2.5">
+                    <div class="bg-slate-200 text-slate-800 p-2.5 rounded-lg text-right max-w-[80%]">
+                        ${query}
+                    </div>
+                    <div class="w-7 h-7 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center flex-shrink-0 font-bold uppercase">
+                        ${currentUser.usuario.charAt(0)}
+                    </div>
+                </div>
+            `;
+
+        input.value = "";
+        box.scrollTop = box.scrollHeight;
+
+        // Procesar respuesta inteligente simulada (lógica if/else con palabras clave)
+        setTimeout(() => {
+          const response = getSmartBotResponse(query.toLowerCase());
+          box.innerHTML += `
+                    <div class="flex items-start gap-2.5">
+                        <div class="w-7 h-7 rounded-full bg-blue-100 text-[#1a237e] flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="bot" class="w-4 h-4"></i>
+                        </div>
+                        <div class="bg-blue-50 text-[#1a237e] p-2.5 rounded-lg border border-blue-100 whitespace-pre-line leading-relaxed">
+                            ${response}
+                        </div>
+                    </div>
+                `;
+          box.scrollTop = box.scrollHeight;
+          lucide.createIcons();
+        }, 600);
+      }
+
+      function getSmartBotResponse(q) {
+        // 1. Respuestas en Español
+        if (chatLang === "es") {
+          if (q.includes("paciente") && q.includes("ci")) {
+            // Extraer CI mediante regex básico
+            const matches = q.match(/\d+/);
+            if (matches) {
+              const ciFound = matches[0];
+              const pac = pacientes.find((p) => p.ci === ciFound);
+              if (pac) {
+                return `🤖 **Paciente encontrado**: \n- **Nombre**: ${pac.nombre}\n- **Contacto**: ${pac.phone}\n- **Historial**: ${pac.history}\n- **Alergias**: ${pac.allergies}`;
+              }
+              return `🤖 No logré encontrar ningún paciente registrado con la C.I.: **${ciFound}**.`;
+            }
+            return "🤖 Por favor, escriba la C.I. completa para ejecutar la búsqueda clínica automática.";
+          }
+
+          if (
+            q.includes("cita") &&
+            (q.includes("proxima") ||
+              q.includes("próxima") ||
+              q.includes("ver"))
+          ) {
+            // Extraer id de paciente si está
+            const matches = q.match(/\d+/);
+            if (matches) {
+              const pacId = matches[0];
+              const cList = citas.filter(
+                (c) => c.pacienteId === pacId && c.estado !== "Cancelada",
+              );
+              if (cList.length > 0) {
+                const proxima = cList[0];
+                return `🤖 **Próxima Cita agendada** (Paciente ID: ${pacId}):\n- **Especialista**: ${proxima.medico}\n- **Fecha y Hora**: ${proxima.fecha} a las ${proxima.hora} Hrs.\n- **Estado**: ${proxima.estado}`;
+              }
+            }
+            return "🤖 No se detectan citas confirmadas para el identificador de paciente consultado. Pruebe especificando el ID numérico.";
+          }
+
+          if (
+            q.includes("paracetamol") ||
+            q.includes("medicamento") ||
+            q.includes("ibuprofeno") ||
+            q.includes("enalapril")
+          ) {
+            if (q.includes("paracetamol")) {
+              return "🤖 **Paracetamol**: Analgésico y antipirético indicado para el alivio sintomático del dolor leve o moderado y fiebre. Dosis recomendada para adultos: 500mg-1g cada 6 a 8 horas. No exceder 4g al día para evitar toxicidad hepática.";
+            }
+            if (q.includes("ibuprofeno")) {
+              return "🤖 **Ibuprofeno**: Antiinflamatorio no esteroideo (AINE). Indicado para dolor, inflamación y fiebre. Tomar siempre con alimentos para proteger la mucosa gástrica.";
+            }
+            if (q.includes("enalapril")) {
+              return "🤖 **Enalapril**: Inhibidor de la ECA utilizado para tratar la hipertensión y la insuficiencia cardíaca. Requiere estricta prescripción y control de presión arterial.";
+            }
+            return "🤖 Consulte siempre a su médico asignado antes de automedicarse. ¿Desea información de un fármaco específico?";
+          }
+
+          if (
+            q.includes("laboratorio") ||
+            q.includes("llegar") ||
+            q.includes("ubicacion") ||
+            q.includes("ubicación") ||
+            q.includes("mapa")
+          ) {
+            return "🤖 **Guía de Orientación Interna S.I.O.S.H.**:\n- **Laboratorio de Análisis Clínicos**: Planta Baja, ala Este (pasillo contiguo a Emergencias).\n- **Consultorios de Especialidades**: Primer Piso, subiendo por las escaleras centrales.\n- **Farmacia del Hospital**: Entrada Principal, a mano izquierda de Recepción.";
+          }
+
+          return "🤖 Disculpe, no comprendí del todo su consulta. Intente preguntando por un paciente mediante C.I. (ej: 'paciente ci 4820194'), ubicación interna de servicios (ej: 'laboratorio') o información de medicamentos.";
+        }
+
+        // 2. Respuestas en Inglés
+        if (chatLang === "en") {
+          if (q.includes("patient") && q.includes("ci")) {
+            const matches = q.match(/\d+/);
+            if (matches) {
+              const ciFound = matches[0];
+              const pac = pacientes.find((p) => p.ci === ciFound);
+              if (pac) {
+                return `🤖 **Patient found**:\n- **Name**: ${pac.nombre}\n- **Phone**: ${pac.phone}\n- **Allergies**: ${pac.allergies}`;
+              }
+              return `🤖 No patient found with C.I.: **${ciFound}**.`;
+            }
+          }
+          if (
+            q.includes("medicine") ||
+            q.includes("pill") ||
+            q.includes("paracetamol")
+          ) {
+            return "🤖 **Paracetamol**: Safe analgesic for pain relief and fever. Recommended dose: 500mg-1g every 6 hours. Do not exceed 4g/day.";
+          }
+          if (
+            q.includes("lab") ||
+            q.includes("where") ||
+            q.includes("laboratory")
+          ) {
+            return "🤖 **Hospital Guide**:\n- **Laboratory**: Ground Floor, East Wing next to ER.\n- **Specialty Care**: First Floor, up the main stairs.";
+          }
+          return "🤖 I couldn't understand that clearly. Please try asking about 'patient ci 4820194' or ask for 'laboratory location'.";
+        }
+
+        // 3. Respuestas en Aymara
+        if (chatLang === "ay") {
+          if (
+            q.includes("patient") ||
+            q.includes("thaqhaña") ||
+            q.includes("ci")
+          ) {
+            return "🤖 Uñt'at jaqi thaqhaña (CI) ukaxa utjiwa. Marcelo Quisbert jichhax qullañ uruw purini.";
+          }
+          if (q.includes("paracetamol") || q.includes("qulla")) {
+            return "🤖 Paracetamol ukaxa t'axnu qullawa, usuchjatat qullañatakiwa.";
+          }
+          return "🤖 Janiw amuykti, asikiwa mayampi arsumay jilata/kullaka.";
+        }
+
+        // 4. Respuestas en Quechua
+        if (chatLang === "qu") {
+          if (
+            q.includes("paciente") ||
+            q.includes("maskay") ||
+            q.includes("ci")
+          ) {
+            return "🤖 Pacienteta maskasunchis. Marcelo Quisbertpa qillqasqanqa ñam kashan.";
+          }
+          if (q.includes("paracetamol") || q.includes("hampi")) {
+            return "🤖 Paracetamol hampiqa nanaypaq, chiri onqoypaq ima kuraq hampim.";
+          }
+          return "🤖 Manam allintachu uyarini, wakmanta tapuykullaway.";
+        }
+
+        return "🤖 ...";
+      }
+
+      // --- 11. LOGICA MÓDULO 7: SIMULADOR IoT EN TIEMPO REAL ---
+      let iotInterval = null;
+
+      function startIoTSimulation() {
+        if (iotInterval) clearInterval(iotInterval);
+
+        iotInterval = setInterval(() => {
+          // 1. Simulación Ritmo Cardíaco
+          const heartVal = Math.floor(Math.random() * (105 - 55 + 1)) + 55; // 55 a 105
+          document.getElementById("iot-heart-val").innerHTML =
+            `${heartVal} <span class="text-lg font-medium text-slate-500">BPM</span>`;
+
+          const heartCard = document.getElementById("iot-card-heart");
+          const heartAlert = document.getElementById("iot-heart-alert");
+          if (heartVal < 60 || heartVal > 100) {
+            heartCard.className =
+              "bg-rose-50 p-6 rounded-xl border-2 border-rose-500 shadow-sm hover:shadow-md transition flex flex-col justify-between";
+            heartAlert.innerText = "¡ANOMALÍA!";
+            heartAlert.className =
+              "text-rose-600 font-extrabold uppercase animate-pulse";
+            logIoTAnomaly(
+              "Ritmo Cardíaco",
+              `${heartVal} BPM (Fuera de rango seguro)`,
+            );
+          } else {
+            heartCard.className =
+              "bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between";
+            heartAlert.innerText = "NORMAL";
+            heartAlert.className = "text-slate-400 font-bold uppercase";
+          }
+
+          // 2. Simulación Temperatura
+          const tempVal = (Math.random() * (38.5 - 35.8) + 35.8).toFixed(1);
+          document.getElementById("iot-temp-val").innerHTML =
+            `${tempVal} <span class="text-lg font-medium text-slate-500">°C</span>`;
+
+          const tempCard = document.getElementById("iot-card-temp");
+          const tempAlert = document.getElementById("iot-temp-alert");
+          if (tempVal < 36.0 || tempVal > 37.5) {
+            tempCard.className =
+              "bg-rose-50 p-6 rounded-xl border-2 border-rose-500 shadow-sm hover:shadow-md transition flex flex-col justify-between";
+            tempAlert.innerText = "¡ANOMALÍA!";
+            tempAlert.className =
+              "text-rose-600 font-extrabold uppercase animate-pulse";
+            logIoTAnomaly(
+              "Temperatura",
+              `${tempVal} °C (Fuera de rango seguro)`,
+            );
+          } else {
+            tempCard.className =
+              "bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between";
+            tempAlert.innerText = "NORMAL";
+            tempAlert.className = "text-slate-400 font-bold uppercase";
+          }
+
+          // 3. Simulación Presión Arterial
+          const sys = Math.floor(Math.random() * (135 - 105 + 1)) + 105;
+          const dia = Math.floor(Math.random() * (90 - 65 + 1)) + 65;
+          document.getElementById("iot-press-val").innerHTML =
+            `${sys}/${dia} <span class="text-lg font-medium text-slate-500">mmHg</span>`;
+
+          const pressCard = document.getElementById("iot-card-press");
+          const pressAlert = document.getElementById("iot-press-alert");
+          if (sys < 110 || sys > 130 || dia < 70 || dia > 85) {
+            pressCard.className =
+              "bg-rose-50 p-6 rounded-xl border-2 border-rose-500 shadow-sm hover:shadow-md transition flex flex-col justify-between";
+            pressAlert.innerText = "¡ANOMALÍA!";
+            pressAlert.className =
+              "text-rose-600 font-extrabold uppercase animate-pulse";
+            logIoTAnomaly(
+              "Presión Arterial",
+              `${sys}/${dia} mmHg (Fuera de rango seguro)`,
+            );
+          } else {
+            pressCard.className =
+              "bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between";
+            pressAlert.innerText = "NORMAL";
+            pressAlert.className = "text-slate-400 font-bold uppercase";
+          }
+        }, 3000);
+      }
+
+      function logIoTAnomaly(dispositivo, valor) {
+        const logBox = document.getElementById("iot-log");
+
+        // Si el log inicial de "no anomalías" existe, limpiarlo
+        if (logBox.innerHTML.includes("No se han registrado")) {
+          logBox.innerHTML = "";
+        }
+
+        const time = new Date().toLocaleTimeString();
+        const alertMsg = `⚠️ [${time}] **${dispositivo}**: Anomalía detectada con valor: ${valor}`;
+
+        // Agregar alerta al listado interno de alertas si es que el paciente simulado activo en telemetría es crítico
+        // Para la demo, el sistema genera alertas de monitoreo vinculándolas a "Pacientes en Observación"
+        const alertId = "iot-" + Math.random().toString(36).substr(2, 5);
+
+        // Añadir log visual
+        logBox.innerHTML =
+          `<div class="p-2 bg-rose-100 text-rose-950 font-semibold border-l-4 border-rose-500 rounded">${alertMsg}</div>` +
+          logBox.innerHTML;
+
+        // Prevenir saturación de logs limitando a 15 entradas
+        if (logBox.children.length > 15) {
+          logBox.removeChild(logBox.lastChild);
+        }
+      }
+
+      // --- 12. GESTION DE MENU MÓVIL ---
+      document
+        .getElementById("mobile-toggle-btn")
+        .addEventListener("click", () => {
+          const aside = document.querySelector("aside");
+          aside.classList.toggle("-translate-x-full");
+          aside.classList.toggle("fixed");
+          aside.classList.toggle("inset-y-0");
+          aside.classList.toggle("left-0");
+        });
+    </script>
+  </body>
+</html>
